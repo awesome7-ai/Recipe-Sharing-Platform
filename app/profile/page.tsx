@@ -16,14 +16,34 @@ export default async function ProfilePage() {
   const supabase = await createClient()
 
   // Fetch user profile
-  const { data: profile, error } = await supabase
+  let { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
+
+  // If profile doesn't exist, create it
+  if (!profile && !error) {
+    const { data: newProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
+        full_name: null,
+      })
+      .select()
+      .single()
+
+    if (insertError || !newProfile) {
+      // If we can't create the profile, redirect to dashboard
+      redirect('/dashboard')
+    }
+
+    profile = newProfile
+  }
 
   if (error || !profile) {
-    // If profile doesn't exist, redirect to dashboard
+    // If there's an error or profile still doesn't exist, redirect to dashboard
     redirect('/dashboard')
   }
 
@@ -64,6 +84,12 @@ export default async function ProfilePage() {
             >
               Profile
             </Link>
+            <Link
+              href="/saved"
+              className="hidden rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 sm:block"
+            >
+              Saved
+            </Link>
             <LogoutButton />
           </div>
         </nav>
@@ -71,52 +97,52 @@ export default async function ProfilePage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-8">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
-              >
-                <svg
-                  className="mr-2 h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Back to Dashboard
-              </Link>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold text-gray-900">Edit Profile</h1>
-                  <p className="mt-2 text-gray-600">Update your profile information</p>
-                </div>
-                <Link
-                  href="/saved"
-                  className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  View Saved Recipes
-                </Link>
-              </div>
+        <div className="mb-8">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <svg
+              className="mr-2 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back to Dashboard
+          </Link>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">Edit Profile</h1>
+              <p className="mt-2 text-gray-600">Update your profile information</p>
             </div>
+            <Link
+              href="/saved"
+              className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              View Saved Recipes
+            </Link>
+          </div>
+        </div>
 
         <div className="rounded-2xl bg-white shadow-sm p-8">
           <EditProfileForm profile={profile} userEmail={user.email || ''} />
@@ -125,4 +151,3 @@ export default async function ProfilePage() {
     </div>
   )
 }
-

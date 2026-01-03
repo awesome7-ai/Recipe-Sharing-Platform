@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from '@/lib/auth/actions'
 
-export function SignInForm() {
+function SignInFormContent() {
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +76,20 @@ export function SignInForm() {
         {loading ? 'Signing in...' : 'Sign in'}
       </button>
     </form>
+  )
+}
+
+export function SignInForm() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-4">
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    }>
+      <SignInFormContent />
+    </Suspense>
   )
 }
 

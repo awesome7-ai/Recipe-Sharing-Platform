@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { signUp } from '@/lib/auth/actions'
 
-export function SignUpForm() {
+function SignUpFormContent() {
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
   const [error, setError] = useState<string | null>(null)
@@ -107,6 +107,22 @@ export function SignUpForm() {
         {loading ? 'Creating account...' : 'Create account'}
       </button>
     </form>
+  )
+}
+
+export function SignUpForm() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-4">
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    }>
+      <SignUpFormContent />
+    </Suspense>
   )
 }
 
